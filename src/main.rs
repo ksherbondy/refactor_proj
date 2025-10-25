@@ -1,77 +1,74 @@
-// Assume this code is in your main.rs file
-
-use std::io;
-
-// Data structure to hold employee metrics
+#[derive(Debug)]
 struct Employee {
     id: u32,
     tasks_completed: u32,
-    time_spent: u32, // Time in hours
+    time_spent: u32,
     performance_score: f64,
+}
+
+impl Employee {
+	
+	fn new(id: u32, tasks_completed: u32, time_spent: u32, performance_score: f64) -> Self {
+		Employee {
+			id: id,
+			tasks_completed: tasks_completed,
+			time_spent: time_spent,
+			performance_score: performance_score,
+		}
+	}
+
+	fn calc_performance(&mut self) -> () {
+		let tasks_f64 = self.tasks_completed as f64;
+		let time_f64 = self.time_spent as f64;
+		
+		if time_f64 == 0.0{
+			self.performance_score = 0.0;
+			} else {
+				self.performance_score = tasks_f64 / time_f64;
+			}
+	}	
 }
 
 fn main() {
     println!("--- Employee Performance Tracker ---");
-    
-    // 1. Initial Data Setup (This should be generated more efficiently)
-    let employees_data: Vec<Employee> = vec![
-        Employee { id: 101, tasks_completed: 45, time_spent: 40, performance_score: 0.0 },
-        Employee { id: 102, tasks_completed: 60, time_spent: 40, performance_score: 0.0 },
-        Employee { id: 103, tasks_completed: 30, time_spent: 40, performance_score: 0.0 },
-    ];
-    
-    // 2. Perform Calculations (This function has efficiency and type issues)
-    let mut processed_employees = calculate_scores(employees_data);
+	
+	let mut employees_data_vec: Vec<Employee> = Vec::new();
+	employees_data_vec.push(Employee::new(101, 45, 40, 0.0));
+	employees_data_vec.push(Employee::new(102, 60, 40, 0.0));
+	employees_data_vec.push(Employee::new(103, 30, 40, 0.0));
+	
+    calculate_scores(&mut employees_data_vec);
 
-    // 3. Find Global Metrics (This function uses basic iteration)
-    let average_score = find_average_score(&processed_employees);
+    let average_score = find_average_score(&employees_data_vec);
 
-    // 4. Find the Best Employee (This is a separate, simple loop)
-    find_most_efficient_employee(&processed_employees);
+    find_most_efficient_employee(&employees_data_vec);
     
     println!("\nTotal Average Team Score: {:.2}", average_score);
 }
 
-// ----------------------------------------------------
-// Functions to Refactor
-// ----------------------------------------------------
+fn calculate_scores(employees: &mut Vec<Employee>) -> () {
 
-// Calculates individual efficiency (tasks / time) and updates the score field
-fn calculate_scores(mut employees: Vec<Employee>) -> Vec<Employee> {
-    
-    let mut total_score = 0.0; // FLaw 1: This accumulating variable is misplaced here
-
-    for employee in &mut employees {
-        // FLaw 2: Division of integers that should be floating point math
-        let efficiency = employee.tasks_completed / employee.time_spent; 
-        
-        employee.performance_score = efficiency as f64;
-        total_score += employee.performance_score; // FLaw 1: Misplaced side effect
+    for employee in employees.iter_mut() {
+		employee.calc_performance();
     }
-    employees
 }
 
-// Calculates the average score (This should be done via iterators)
 fn find_average_score(employees: &Vec<Employee>) -> f64 {
-    let mut sum = 0.0;
-    for employee in employees {
-        sum += employee.performance_score;
-    }
-    // FLaw 3: Manual casting and division
-    sum / employees.len() as f64
+	let sum: f64 = employees.iter()
+		.map(|employee| employee.performance_score)
+		.sum();
+	sum / employees.len() as f64
 }
 
-// Finds the employee with the highest performance score
 fn find_most_efficient_employee(employees: &Vec<Employee>) {
-    let mut best_id = 0;
-    let mut highest_score = 0.0;
-    
-    // FLaw 4: Uses a simple for loop, which is fine, but can be improved with iterators
-    for employee in employees {
-        if employee.performance_score > highest_score {
-            highest_score = employee.performance_score;
-            best_id = employee.id;
-        }
-    }
-    println!("Most Efficient Employee ID: {}", best_id);
+	if let Some(best_employee) = employees.iter()
+	        .max_by_key(|employee| {
+	            employee.performance_score.total_cmp(&0.0) 
+	        })
+	    {
+	        println!("Most Efficient Employee ID: {}", best_employee.id);
+	        println!("Highest Score: {:.2}", best_employee.performance_score);
+	    } else {
+	        println!("Error: Employee list is empty.");
+	    }
 }
